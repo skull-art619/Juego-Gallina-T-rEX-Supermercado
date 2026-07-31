@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La gallina del supermercado</title>
+  <style>
+    :root {
+      --bg: #f5f7f2;
+      --panel: #ffffff;
+      --text: #1f2a1f;
+      --muted: #667066;
+      --accent: #3f7d3a;
+      --accent-dark: #2f602c;
+      --border: #cfd8cc;
+      --danger: #b42318;
+      --track: #e1e8df;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(920px, 100%);
+    }
+
+    .topbar {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.55rem, 4vw, 2.25rem);
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      min-width: 120px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 14px;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 1.4rem;
+    }
+
+    .game-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .game-area {
+      position: relative;
+      height: 390px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: linear-gradient(#eaf5ff 0 65%, #f3f0df 65%);
+    }
+
+    .cloud {
+      position: absolute;
+      opacity: 0.55;
+      font-size: 2rem;
+    }
+
+    .cloud.one { left: 14%; top: 32px; }
+    .cloud.two { left: 68%; top: 58px; font-size: 1.6rem; }
+
+    .ground-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 62px;
+      border-top: 3px solid #7f8b76;
+    }
+
+    #ground {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 62px;
+      background-image: repeating-linear-gradient(
+        90deg,
+        transparent 0 28px,
+        #a3ad9f 28px 34px
+      );
+    }
+
+    #chicken {
+      position: absolute;
+      left: 55px;
+      bottom: 62px;
+      font-size: 4rem;
+      transform-origin: center bottom;
+      z-index: 3;
+    }
+
+    #obstacle {
+      position: absolute;
+      right: -90px;
+      bottom: 62px;
+      font-size: 3.5rem;
+      z-index: 2;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 10;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(2px);
+    }
+
+    .overlay.show { display: flex; }
+
+    .panel {
+      width: min(470px, 100%);
+      background: rgba(255,255,255,0.97);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.10);
+      text-align: center;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+    }
+
+    .panel p {
+      margin: 7px 0;
+      color: var(--muted);
+    }
+
+    .challenge-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      background: #e7f0e5;
+      border-radius: 999px;
+      padding: 6px 11px;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .countdown {
+      font-size: 1.8rem;
+      font-weight: 800;
+    }
+
+    .timer-track {
+      width: 100%;
+      height: 10px;
+      background: var(--track);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    #timerBar {
+      height: 100%;
+      width: 100%;
+      background: var(--accent);
+      transition: width 1s linear;
+    }
+
+    .visual-box {
+      min-height: 120px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      background: #f5f9f3;
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+
+    #itemVisual {
+      font-size: 4.8rem;
+      line-height: 1;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      font-weight: 700;
+      margin: 14px 0 6px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 13px;
+      font: inherit;
+      font-size: 1rem;
+    }
+
+    input:focus {
+      outline: 3px solid rgba(63,125,58,0.22);
+      border-color: var(--accent);
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+    }
+
+    button:hover { background: var(--accent-dark); }
+    button:disabled { opacity: 0.55; cursor: default; }
+
+    .wide {
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    #feedback {
+      min-height: 22px;
+      margin-top: 10px;
+      font-weight: 700;
+      color: var(--danger);
+    }
+
+    .final-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .final-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .final-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .final-card strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.45rem;
+    }
+
+    .note {
+      margin: 12px 2px 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .running { animation: runBob 0.24s infinite alternate ease-in-out; }
+    .ground-moving { animation: groundMove 0.5s linear infinite; }
+    .obstacle-moving { animation: obstacleMove 3.2s linear forwards; }
+    .jumping { animation: chickenJump 0.68s ease-in-out; }
+    .exploding { animation: explodeShake 0.35s linear; }
+
+    .yoghurt-pot {
+      position: relative;
+      width: 82px;
+      height: 82px;
+      margin: 0 auto;
+      border: 4px solid #344;
+      border-radius: 10px 10px 25px 25px;
+      background: white;
+    }
+
+    .yoghurt-pot::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      right: -8px;
+      top: -10px;
+      height: 14px;
+      border: 4px solid #344;
+      border-radius: 8px;
+      background: #ddebd9;
+    }
+
+    .yoghurt-label {
+      position: absolute;
+      inset: 23px 8px 11px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: #e7f0e5;
+      color: #223;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    @keyframes runBob {
+      from { transform: translateY(0) rotate(-2deg); }
+      to { transform: translateY(-5px) rotate(2deg); }
+    }
+
+    @keyframes groundMove {
+      from { background-position-x: 0; }
+      to { background-position-x: -34px; }
+    }
+
+    @keyframes obstacleMove {
+      from { right: -90px; }
+      to { right: calc(100% - 145px); }
+    }
+
+    @keyframes chickenJump {
+      0% { transform: translateY(0) rotate(0); }
+      48% { transform: translateY(-112px) rotate(-8deg); }
+      100% { transform: translateY(0) rotate(0); }
+    }
+
+    @keyframes explodeShake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-11px); }
+      75% { transform: translateX(11px); }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .game-area { height: 430px; }
+      #chicken { left: 28px; font-size: 3.6rem; }
+      .obstacle-moving { animation-duration: 3.2s; }
+      @keyframes obstacleMove {
+        from { right: -90px; }
+        to { right: calc(100% - 100px); }
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div>
+        <h1>La gallina del supermercado</h1>
+        <p class="subtitle">Responde correctamente en 25 segundos para seguir corriendo.</p>
+      </div>
+      <div class="stats" aria-label="Game statistics">
+        <div class="stat">
+          <span>Puntos</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="stat">
+          <span>Tiempo total</span>
+          <strong id="totalTime">00:00</strong>
+        </div>
+      </div>
+    </div>
+
+    <section class="game-card">
+      <div class="game-area" id="gameArea">
+        <div class="cloud one">☁️</div>
+        <div class="cloud two">☁️</div>
+        <div class="ground-line"></div>
+        <div id="ground"></div>
+
+        <div id="chicken" aria-label="Gallina corriendo">🐔</div>
+        <div id="obstacle" aria-label="Obstáculo">📦</div>
+
+        <div id="startScreen" class="overlay show">
+          <div class="panel">
+            <h2>Ayuda a la gallina</h2>
+            <p>Después de cada salto aparecerá un producto del supermercado.</p>
+            <p>Tienes <strong>25 segundos</strong> para escribir su nombre en español.</p>
+            <button id="startBtn" type="button">Empezar</button>
+          </div>
+        </div>
+
+        <div id="challengeScreen" class="overlay">
+          <div class="panel">
+            <div class="challenge-head">
+              <span class="badge">Pregunta <span id="round">1</span></span>
+              <div>
+                <div style="font-size:.8rem;color:var(--muted)">Tiempo restante</div>
+                <div id="questionTimer" class="countdown">25</div>
+              </div>
+            </div>
+
+            <div class="timer-track" aria-hidden="true">
+              <div id="timerBar"></div>
+            </div>
+
+            <div class="visual-box">
+              <div id="itemVisual" role="img" aria-label="Producto del supermercado">🥖</div>
+            </div>
+
+            <p id="hint"></p>
+
+            <label for="answer">¿Qué es?</label>
+            <input id="answer" type="text" autocomplete="off" placeholder="Escribe la palabra..." />
+
+            <button id="submitBtn" class="wide" type="button">Comprobar</button>
+            <div id="feedback" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div id="gameOverScreen" class="overlay">
+          <div class="panel">
+            <div style="font-size:4.8rem">💥</div>
+            <h2>Fin de la partida</h2>
+            <p id="failureMessage"></p>
+
+            <div class="final-grid">
+              <div class="final-card">
+                <span>Puntuación</span>
+                <strong id="finalScore">0</strong>
+              </div>
+              <div class="final-card">
+                <span>Tiempo total</span>
+                <strong id="finalTime">00:00</strong>
+              </div>
+            </div>
+
+            <button id="retryBtn" type="button">Try Again</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="note">Se aceptan respuestas con o sin artículo y con o sin tilde.</p>
+    </section>
+  </main>
+
+  <script>
+    const vocabulary = [
+      { answer: "el pan", accepted: ["pan", "el pan"], visual: "🥖", hint: "Se compra en la panadería." },
+      { answer: "la leche", accepted: ["leche", "la leche"], visual: "🥛", hint: "Es una bebida blanca." },
+      { answer: "el queso", accepted: ["queso", "el queso"], visual: "🧀", hint: "Es un producto lácteo." },
+      { answer: "la manzana", accepted: ["manzana", "la manzana"], visual: "🍎", hint: "Es una fruta." },
+      { answer: "el pescado", accepted: ["pescado", "el pescado"], visual: "🐟", hint: "Se compra en la pescadería." },
+      { answer: "la carne", accepted: ["carne", "la carne"], visual: "🥩", hint: "Se compra en la carnicería." },
+      { answer: "el pollo", accepted: ["pollo", "el pollo"], visual: "🍗", hint: "Es un tipo de carne." },
+      { answer: "el agua", accepted: ["agua", "el agua"], visual: "💧", hint: "Es una bebida." },
+      { answer: "el zumo", accepted: ["zumo", "el zumo", "jugo", "el jugo"], visual: "🧃", hint: "Es una bebida de fruta." },
+      { answer: "el yogur", accepted: ["yogur", "el yogur", "yogurt", "el yogurt"], visual: "YOGHURT", hint: "Es un producto lácteo en un pequeño recipiente." },
+      { answer: "el jabón", accepted: ["jabon", "el jabon", "jabón", "el jabón"], visual: "🧼", hint: "Sirve para lavarse." },
+      { answer: "el champú", accepted: ["champu", "el champu", "champú", "el champú"], visual: "🧴", hint: "Sirve para lavarse el pelo." },
+      { answer: "el carrito", accepted: ["carrito", "el carrito", "carro", "el carro", "carrito de la compra"], visual: "🛒", hint: "Se usa para llevar la compra." },
+      { answer: "la caja", accepted: ["caja", "la caja"], visual: "🧾", hint: "Aquí pagamos la compra." },
+      { answer: "los huevos", accepted: ["huevo", "el huevo", "huevos", "los huevos"], visual: "🥚🥚", hint: "Pueden comprarse individualmente o en una caja." },
+      { answer: "el helado", accepted: ["helado", "el helado"], visual: "🍦", hint: "Es un producto congelado." }
+    ];
+
+    const obstacles = ["📦", "🧱", "🪨"];
+
+    const $ = (id) => document.getElementById(id);
+
+    let deck = [];
+    let currentItem = null;
+    let score = 0;
+    let round = 0;
+    let elapsed = 0;
+    let remaining = 25;
+    let totalTimer = null;
+    let questionTimer = null;
+    let playing = false;
+    let acceptingAnswer = false;
+
+    function normalize(value) {
+      return value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zñ ]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function formatTime(seconds) {
+      const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
+      const remainder = String(seconds % 60).padStart(2, "0");
+      return `${minutes}:${remainder}`;
+    }
+
+    function updateHeader() {
+      $("score").textContent = score;
+      $("totalTime").textContent = formatTime(elapsed);
+    }
+
+    function showOnly(screenId) {
+      ["startScreen", "challengeScreen", "gameOverScreen"].forEach((id) => {
+        $(id).classList.toggle("show", id === screenId);
+      });
+    }
+
+    function startGame() {
+      clearInterval(totalTimer);
+      clearInterval(questionTimer);
+
+      deck = shuffle(vocabulary);
+      currentItem = null;
+      score = 0;
+      round = 0;
+      elapsed = 0;
+      remaining = 25;
+      playing = true;
+      acceptingAnswer = false;
+
+      $("chicken").textContent = "🐔";
+      $("chicken").className = "running";
+      $("ground").classList.add("ground-moving");
+      $("obstacle").className = "";
+      $("obstacle").style.right = "-90px";
+
+      showOnly(null);
+      updateHeader();
+
+      totalTimer = setInterval(() => {
+        elapsed++;
+        updateHeader();
+      }, 1000);
+
+      setTimeout(runObstacle, 650);
+    }
+
+    function runObstacle() {
+      if (!playing) return;
+
+      const obstacle = $("obstacle");
+      const chicken = $("chicken");
+
+      obstacle.classList.remove("obstacle-moving");
+      chicken.classList.remove("jumping");
+      obstacle.style.right = "-90px";
+      obstacle.textContent = obstacles[Math.floor(Math.random() * obstacles.length)];
+      void obstacle.offsetWidth;
+      obstacle.classList.add("obstacle-moving");
+
+      // The jump begins near the obstacle, not halfway across the screen.
+      setTimeout(() => {
+        if (!playing) return;
+        chicken.classList.remove("running");
+        chicken.classList.add("jumping");
+      }, 2500);
+
+      setTimeout(() => {
+        if (!playing) return;
+        obstacle.classList.remove("obstacle-moving");
+        obstacle.style.right = "calc(100% - 145px)";
+        openQuestion();
+      }, 3060);
+    }
+
+    function renderVisual(item) {
+      if (item.visual === "YOGHURT") {
+        $("itemVisual").innerHTML =
+          '<div class="yoghurt-pot" aria-label="Vaso de yogur"><div class="yoghurt-label">YOGUR</div></div>';
+      } else {
+        $("itemVisual").textContent = item.visual;
+      }
+    }
+
+    function openQuestion() {
+      if (!playing) return;
+
+      if (deck.length === 0) deck = shuffle(vocabulary);
+
+      currentItem = deck.pop();
+      round++;
+      remaining = 25;
+      acceptingAnswer = true;
+
+      $("chicken").classList.remove("jumping");
+      renderVisual(currentItem);
+      $("hint").textContent = currentItem.hint;
+      $("round").textContent = round;
+      $("answer").value = "";
+      $("feedback").textContent = "";
+      updateQuestionTimer();
+      showOnly("challengeScreen");
+      $("answer").focus();
+
+      clearInterval(questionTimer);
+      questionTimer = setInterval(() => {
+        remaining--;
+        updateQuestionTimer();
+
+        if (remaining <= 0) {
+          endGame("Se acabó el tiempo.");
+        }
+      }, 1000);
+    }
+
+    function updateQuestionTimer() {
+      $("questionTimer").textContent = remaining;
+      $("timerBar").style.width = `${Math.max(0, remaining / 25) * 100}%`;
+    }
+
+    function checkAnswer() {
+      if (!playing || !acceptingAnswer || !currentItem) return;
+
+      const response = normalize($("answer").value);
+
+      if (!response) {
+        $("feedback").textContent = "Escribe una respuesta.";
+        return;
+      }
+
+      const correct = currentItem.accepted.some(
+        (acceptedAnswer) => normalize(acceptedAnswer) === response
+      );
+
+      if (!correct) {
+        endGame("La respuesta no es correcta.");
+        return;
+      }
+
+      acceptingAnswer = false;
+      clearInterval(questionTimer);
+      score++;
+      updateHeader();
+      $("feedback").style.color = "var(--accent-dark)";
+      $("feedback").textContent = `✓ Correcto: ${currentItem.answer}`;
+
+      setTimeout(() => {
+        showOnly(null);
+        $("obstacle").style.right = "-90px";
+        $("chicken").classList.add("running");
+        $("feedback").style.color = "var(--danger)";
+        setTimeout(runObstacle, 500);
+      }, 650);
+    }
+
+    function endGame(reason) {
+      if (!playing) return;
+
+      playing = false;
+      acceptingAnswer = false;
+      clearInterval(totalTimer);
+      clearInterval(questionTimer);
+
+      $("ground").classList.remove("ground-moving");
+      $("obstacle").classList.remove("obstacle-moving");
+      $("chicken").classList.remove("running", "jumping");
+      $("chicken").classList.add("exploding");
+      $("chicken").textContent = "💥";
+
+      $("finalScore").textContent = score;
+      $("finalTime").textContent = formatTime(elapsed);
+      $("failureMessage").textContent = currentItem
+        ? `${reason} La respuesta era: ${currentItem.answer}`
+        : reason;
+
+      setTimeout(() => showOnly("gameOverScreen"), 350);
+    }
+
+    $("startBtn").addEventListener("click", startGame);
+    $("retryBtn").addEventListener("click", startGame);
+    $("submitBtn").addEventListener("click", checkAnswer);
+    $("answer").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") checkAnswer();
+    });
+
+    updateHeader();
+  </script>
+</body>
+</html>
